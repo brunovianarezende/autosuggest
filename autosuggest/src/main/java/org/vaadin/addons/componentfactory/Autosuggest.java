@@ -28,16 +28,12 @@ import com.vaadin.flow.component.dependency.NpmPackage;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
-import com.vaadin.flow.component.polymertemplate.EventHandler;
-import com.vaadin.flow.component.polymertemplate.Id;
-import com.vaadin.flow.component.polymertemplate.PolymerTemplate;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.dom.Element;
 import com.vaadin.flow.dom.Style;
 import com.vaadin.flow.dom.ThemeList;
 import com.vaadin.flow.shared.Registration;
-import com.vaadin.flow.templatemodel.TemplateModel;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -53,76 +49,44 @@ import java.util.stream.Collectors;
 
 @Tag("vcf-autosuggest")
 @NpmPackage(value = "@vaadin/vaadin-element-mixin", version = "21.0.5")
-@NpmPackage(value = "@vaadin-component-factory/vcf-autosuggest", version = "1.1.6")
+@NpmPackage(value = "@vaadin-component-factory/vcf-autosuggest", version = "2.0.0")
 @JsModule("@vaadin-component-factory/vcf-autosuggest/src/vcf-autosuggest.js")
 //@JsModule("./vcf-autosuggest.js")
 @CssImport(value = "@vaadin-component-factory/vcf-autosuggest/styles/style.css")
-public class Autosuggest<T> extends PolymerTemplate<Autosuggest.AutosuggestTemplateModel>
+public class Autosuggest<T> extends Component
     implements HasTheme, HasSize, Focusable<Autosuggest<T>>, HasValidation {
-
     /**
      * This model binds properties {@link Autosuggest} and
      * vcf-autosuggest.html
      */
-    public interface AutosuggestTemplateModel extends TemplateModel {
-        class FOption {
-            String key;
-            String label;
-            String searchStr;
+    private static class FOption {
+        String key;
+        String label;
+        String searchStr;
 
-            public FOption(String key, String label, String searchStr) {
-                this.key = key;
-                this.label = label;
-                this.searchStr = searchStr;
-            }
-
-            public String getKey() { return this.key; }
-            public void setKey(String key) { this.key = key; }
-            public String getLabel() { return this.label; }
-            public void setLabel(String label) { this.label = label; }
-            public String getSearchStr() { return this.searchStr; }
-            public void setSearchStr(String searchStr) { this.searchStr = searchStr; }
+        public FOption(String key, String label, String searchStr) {
+            this.key = key;
+            this.label = label;
+            this.searchStr = searchStr;
         }
 
-        String getInputValue();
-        String getSelectedValue();
-        List<FOption> getOptions();
-        List<FOption> getOptionsForWhenValueIsNull();
-        String getPlaceholder();
-        Boolean getOpenDropdownOnClick();
-        Boolean getReadOnly();
-        Integer getLimit();
-        String getLabel();
-        Boolean getLazy();
-        Boolean getCaseSensitive();
-        String getSearchMatchingMode();
-        Boolean getCustomizeOptionsForWhenValueIsNull();
-        FOption getDefaultOption();
-        Boolean getDisableSearchHighlighting();
-        Boolean getLoading();
-        String getCustomItemTemplate();
-        Boolean getOpened();
-        Integer getMinimumInputLengthToPerformLazyQuery();
-        void setLoading(Boolean loading);
-        void setOptions(List<FOption> options);
-        void setOptionsForWhenValueIsNull(List<FOption> options);
-        void setPlaceholder(String placeholder);
-        void setOpenDropdownOnClick(Boolean openDropdownOnClick);
-        void setReadOnly(Boolean readOnly);
-        void setLimit(Integer limit);
-        void setLabel(String label);
-        void setLazy(Boolean lazy);
-        void setCaseSensitive(Boolean caseSensitive);
-        void setSearchMatchingMode(String smm);
-        void setCustomizeOptionsForWhenValueIsNull(Boolean v);
-        void setDefaultOption(FOption option);
-        void setDisableSearchHighlighting(Boolean v);
-        void setCustomItemTemplate(String tpl);
-        void setOpened(Boolean v);
-        void setMinimumInputLengthToPerformLazyQuery(Integer minL);
+        public String getKey() { return this.key; }
+        public void setKey(String key) { this.key = key; }
+        public String getLabel() { return this.label; }
+        public void setLabel(String label) { this.label = label; }
+        public String getSearchStr() { return this.searchStr; }
+        public void setSearchStr(String searchStr) { this.searchStr = searchStr; }
+
+        public Map<String, Object> toMap() {
+            Map<String, Object> result = new HashMap<>();
+            result.put("key", key);
+            result.put("label", label);
+            result.put("searchStr", searchStr);
+            return result;
+        }
     }
 
-    class Option extends AutosuggestTemplateModel.FOption {
+    class Option extends FOption {
         T item;
 
         public Option(String key, String label, String searchStr,T item) {
@@ -165,7 +129,7 @@ public class Autosuggest<T> extends PolymerTemplate<Autosuggest.AutosuggestTempl
     private Map<String, Option> itemsForWhenValueIsNull = new HashMap<>();
     public Map<String, Option> getItemsForWhenValueIsNull() { return this.itemsForWhenValueIsNull; }
 
-    @Id
+//    @Id
     private TextField textField;
     public TextField getTextField() { return this.textField; }
 
@@ -173,10 +137,10 @@ public class Autosuggest<T> extends PolymerTemplate<Autosuggest.AutosuggestTempl
     private LabelGenerator<T> labelGenerator = null;
     private SearchStringGenerator<T> searchStringGenerator = null;
 
-    @Id(value = "autosuggestOverlay")
+//    @Id(value = "autosuggestOverlay")
     private Element overlay;
 
-    @Id(value = "dropdownEndSlot")
+//    @Id(value = "dropdownEndSlot")
     private Element dropdownEndSlot;
 
     private FlexLayout inputPrefix;
@@ -186,6 +150,17 @@ public class Autosuggest<T> extends PolymerTemplate<Autosuggest.AutosuggestTempl
     private Registration inputTextChangeEvent;
     private Registration selectionEvent;
     private Registration lazyDataRequestEventH;
+
+    // properties
+    private boolean openDropdownOnClick;
+    private boolean caseSensitive;
+    private Boolean lazy;
+    private String label;
+    private Boolean customizeOptionsForWhenValueIsNull;
+    private Integer minimumInputLengthToPerformLazyQuery;
+    private String placeholder;
+    private int limit;
+    private String searchMatchingMode;
 
     /**
      * Constructor that sets the maximum number of displayed options.
@@ -258,7 +233,6 @@ public class Autosuggest<T> extends PolymerTemplate<Autosuggest.AutosuggestTempl
         });
     }
 
-    @EventHandler
     public void clear() {
         fireEvent(new ValueClearEvent(this, true));
     }
@@ -293,33 +267,36 @@ public class Autosuggest<T> extends PolymerTemplate<Autosuggest.AutosuggestTempl
     }
 
     public boolean getOpenDropdownOnClick() {
-        return getModel().getOpenDropdownOnClick();
+        return this.openDropdownOnClick;
     }
 
     public void setOpenDropdownOnClick(boolean v) {
-        getModel().setOpenDropdownOnClick(v);
+        this.openDropdownOnClick = v;
+        this.getElement().setProperty("openDropdownOnClick", v);
     }
 
     public void setLoading(boolean loading) {
-        getModel().setLoading(loading);
+        this.getElement().setProperty("loading", loading);
         getElement().executeJs("this._loadingChanged(" + loading + ")");
     }
 
     public Boolean isCaseSensitive() {
-        return getModel().getCaseSensitive();
+        return this.caseSensitive;
     }
 
     public void setCaseSensitive(boolean v) {
-        getModel().setCaseSensitive(v);
+        this.caseSensitive = v;
+        getElement().setProperty("caseSensitive", v);
     }
 
     public Boolean isLazy() {
-        return getModel().getLazy();
+        return this.lazy;
     }
 
     public void setLazy(boolean lazy) {
         textField.setValueChangeMode(lazy ? ValueChangeMode.LAZY : ValueChangeMode.ON_CHANGE);
-        getModel().setLazy(lazy);
+        this.lazy = lazy;
+        this.getElement().setProperty("lazy", this.lazy);
         if(inputTextChangeEvent!=null) inputTextChangeEvent.remove();
         if(selectionEvent!=null) selectionEvent.remove();
         if (lazy) {
@@ -339,7 +316,7 @@ public class Autosuggest<T> extends PolymerTemplate<Autosuggest.AutosuggestTempl
                     return;
                 }
 
-                if (valueChangeEvent.getValue().toString().trim().length() >= getModel().getMinimumInputLengthToPerformLazyQuery())
+                if (valueChangeEvent.getValue().toString().trim().length() >= getMinimumInputLengthToPerformLazyQuery())
                     getEventBus().fireEvent(new AutosuggestLazyDataRequestEvent(this, true, valueChangeEvent
                         .getValue()
                         .toString()));
@@ -349,19 +326,21 @@ public class Autosuggest<T> extends PolymerTemplate<Autosuggest.AutosuggestTempl
     }
 
     public SearchMatchingMode getSearchMatchingMode() {
-        return SearchMatchingMode.valueOf(getModel().getSearchMatchingMode());
+        return SearchMatchingMode.valueOf(this.searchMatchingMode);
     }
 
     public void setSearchMatchingMode(SearchMatchingMode smm) {
-        getModel().setSearchMatchingMode(smm.toString());
+        this.searchMatchingMode = smm.toString();
+        getElement().setProperty("searchMatchingMode", searchMatchingMode);
     }
 
     public Integer getMinimumInputLengthToPerformLazyQuery() {
-        return getModel().getMinimumInputLengthToPerformLazyQuery();
+        return this.minimumInputLengthToPerformLazyQuery;
     }
 
     public void setMinimumInputLengthToPerformLazyQuery(Integer minLength) {
-        getModel().setMinimumInputLengthToPerformLazyQuery(minLength);
+        this.minimumInputLengthToPerformLazyQuery = minLength;
+        this.getElement().setProperty("minimumInputLengthToPerformLazyQuery", this.minimumInputLengthToPerformLazyQuery);
     }
 
     public void setInputLengthBelowMinimumMsg(String msg) {
@@ -379,7 +358,7 @@ public class Autosuggest<T> extends PolymerTemplate<Autosuggest.AutosuggestTempl
      * @return the {@code placeholder} property from the webcomponent
      */
     public String getPlaceholder() {
-        return getModel().getPlaceholder();
+        return this.placeholder;
     }
 
     /**
@@ -393,11 +372,12 @@ public class Autosuggest<T> extends PolymerTemplate<Autosuggest.AutosuggestTempl
      *            the String value to set
      */
     public void setPlaceholder(String placeholder) {
-        getModel().setPlaceholder(placeholder);
+        this.placeholder = placeholder;
+        this.getElement().setProperty("placeholder", this.placeholder);
     }
 
     public void setReadOnly(boolean readOnly) {
-        getModel().setReadOnly(readOnly);
+        this.getElement().setProperty("readOnly", readOnly);
         if(showClearButton && getValueKey() != null && !getValueKey().isEmpty() && !readOnly) {
             clearButton.getElement().getStyle().set("display", "block");
         } else {
@@ -413,7 +393,7 @@ public class Autosuggest<T> extends PolymerTemplate<Autosuggest.AutosuggestTempl
      *         there is not a limit set.
      */
     public int getLimit() {
-        return getModel().getLimit();
+        return this.limit;
     }
 
     /**
@@ -424,7 +404,8 @@ public class Autosuggest<T> extends PolymerTemplate<Autosuggest.AutosuggestTempl
      * @param limit maximum number of displayed options
      */
     public void setLimit(int limit) {
-        getModel().setLimit(limit);
+        this.limit = limit;
+        this.getElement().setProperty("limit", this.limit);
     }
 
     @Synchronize(property = "inputValue", value = "vcf-autosuggest-input-value-changed")
@@ -499,7 +480,7 @@ public class Autosuggest<T> extends PolymerTemplate<Autosuggest.AutosuggestTempl
      * @return the {@code label} property from the webcomponent
      */
     public String getLabel() {
-        return getModel().getLabel();
+        return this.label;
     }
 
     /**
@@ -511,15 +492,17 @@ public class Autosuggest<T> extends PolymerTemplate<Autosuggest.AutosuggestTempl
      *            the String value to set
      */
     public void setLabel(String label) {
-        getModel().setLabel(label == null ? "" : label);
+        this.label = label == null ? "" : label;
+        this.getElement().setProperty("label", this.label);
     }
 
     public Boolean getCustomizeItemsForWhenValueIsNull() {
-        return getModel().getCustomizeOptionsForWhenValueIsNull();
+        return this.customizeOptionsForWhenValueIsNull;
     }
 
     public void setCustomizeItemsForWhenValueIsNull(boolean v) {
-        getModel().setCustomizeOptionsForWhenValueIsNull(v);
+        this.customizeOptionsForWhenValueIsNull = v;
+        this.getElement().setProperty("customizeOptionsForWhenValueIsNull", this.customizeOptionsForWhenValueIsNull);
     }
 
     public Registration addEagerInputChangeListener(ComponentEventListener<EagerInputChangeEvent> listener) {
@@ -552,15 +535,17 @@ public class Autosuggest<T> extends PolymerTemplate<Autosuggest.AutosuggestTempl
     }
 
     public void clearDefaultOptionValue() {
-        getModel().setDefaultOption(null);
+        this.getElement().setProperty("defaultOption", null);
     }
 
     public void setDefaultOption(String key, String label, String searchStr) {
-        getModel().setDefaultOption(new AutosuggestTemplateModel.FOption(key, label, searchStr));
+        FOption defaultOption = new FOption(key, label, searchStr);
+        this.getElement().setPropertyMap("defaultOption", defaultOption.toMap());
     }
 
     public void setDefaultOption(String label) {
-        getModel().setDefaultOption(new AutosuggestTemplateModel.FOption(label, label, label));
+        FOption defaultOption = new FOption(label, label, label);
+        this.getElement().setPropertyMap("defaultOption", defaultOption.toMap());
     }
 
     /**
@@ -577,12 +562,12 @@ public class Autosuggest<T> extends PolymerTemplate<Autosuggest.AutosuggestTempl
 
     public void setLazyProviderSimple(LazyProviderFunctionSimple<T> ff) {
         if(lazyDataRequestEventH!=null) lazyDataRequestEventH.remove();
-        lazyDataRequestEventH = addLazyDataRequestListener(event -> setItems(ff.refresh(getModel().getInputValue())));
+        lazyDataRequestEventH = addLazyDataRequestListener(event -> setItems(ff.refresh(getInputValue())));
     }
 
     public void setLazyProviderMap(LazyProviderFunctionMap<T> ff) {
         if(lazyDataRequestEventH!=null) lazyDataRequestEventH.remove();
-        lazyDataRequestEventH = addLazyDataRequestListener(event -> setItems(ff.refresh(getModel().getInputValue())));
+        lazyDataRequestEventH = addLazyDataRequestListener(event -> setItems(ff.refresh(getInputValue())));
     }
 
     public void setKeyGenerator(KeyGenerator<T> keyG) {
@@ -607,28 +592,30 @@ public class Autosuggest<T> extends PolymerTemplate<Autosuggest.AutosuggestTempl
 
     public void clearSearchStringGenerator() {
         this.searchStringGenerator = null;
-        getModel().setDisableSearchHighlighting(false);
+        this.getElement().setProperty("disableSearchHighlighting", false);
         this.setItems();
     }
 
     public void setSearchStringGenerator(SearchStringGenerator<T> searchStringGenerator) {
         this.searchStringGenerator = searchStringGenerator;
-        getModel().setDisableSearchHighlighting(true);
+        this.getElement().setProperty("disableSearchHighlighting", true);
         this.setItems();
     }
 
     public void clearItemsForWhenValueIsNull() {
-        getModel().setCustomizeOptionsForWhenValueIsNull(false);
+        this.customizeOptionsForWhenValueIsNull = false;
+        this.getElement().setProperty("customizeOptionsForWhenValueIsNull", this.customizeOptionsForWhenValueIsNull);
         this.itemsForWhenValueIsNull = new HashMap<>();
-        getModel().setOptionsForWhenValueIsNull(new ArrayList<>());
+        setOptionsForWhenValueIsNull(new ArrayList<>());
     }
 
     public void setItemsForWhenValueIsNull(Collection<T> items) {
         this.itemsForWhenValueIsNull.clear();
         this.itemsForWhenValueIsNull.putAll(items.stream().collect(Collectors.toMap(this::getKey, this::getOption)));
 
-        getModel().setCustomizeOptionsForWhenValueIsNull(true);
-        getModel().setOptionsForWhenValueIsNull(new ArrayList<>(this.itemsForWhenValueIsNull.values()));
+        this.customizeOptionsForWhenValueIsNull = true;
+        this.getElement().setProperty("customizeOptionsForWhenValueIsNull", this.customizeOptionsForWhenValueIsNull);
+        setOptionsForWhenValueIsNull(new ArrayList<>(this.itemsForWhenValueIsNull.values()));
     }
 
     public void setItemsForWhenValueIsNull(Map<String, T> items) {
@@ -637,12 +624,18 @@ public class Autosuggest<T> extends PolymerTemplate<Autosuggest.AutosuggestTempl
                 items.keySet().stream().collect(Collectors.toMap(key -> key, key -> getOption(items.get(key))))
         );
 
-        getModel().setCustomizeOptionsForWhenValueIsNull(true);
-        getModel().setOptionsForWhenValueIsNull(new ArrayList<>(this.itemsForWhenValueIsNull.values()));
+        this.customizeOptionsForWhenValueIsNull = true;
+        this.getElement().setProperty("CustomizeOptionsForWhenValueIsNull", this.customizeOptionsForWhenValueIsNull);
+        setOptionsForWhenValueIsNull(new ArrayList<>(this.itemsForWhenValueIsNull.values()));
+    }
+
+    private void setOptionsForWhenValueIsNull(List<FOption> options) {
+        List<Map<String, Object>> optionsAsMaps = options.stream().map(FOption::toMap).collect(Collectors.toList());
+        getElement().setPropertyList("optionsForWhenValueIsNull", optionsAsMaps);
     }
 
     public void clearOptionTemplate() {
-        getModel().setCustomItemTemplate(null);
+        this.getElement().setProperty("customItemTemplate", null);
     }
 
     public void setOptionTemplate(String template) { //Available to replace: ${domItem}, ${option}
@@ -650,7 +643,7 @@ public class Autosuggest<T> extends PolymerTemplate<Autosuggest.AutosuggestTempl
             "return `" + template + "`;" +
         "}";
 
-        getModel().setCustomItemTemplate(generator);
+        this.getElement().setProperty("customItemTemplate", generator);
     }
 
     private void setItems() {
@@ -660,7 +653,7 @@ public class Autosuggest<T> extends PolymerTemplate<Autosuggest.AutosuggestTempl
     public void setItems(Collection<T> items) {
         clearItems();
         this.items.putAll(items.stream().collect(Collectors.toMap(this::getKey, this::getOption)));
-        getModel().setOptions(new ArrayList<>(this.items.values()));
+        setOptions(new ArrayList<>(this.items.values()));
         getElement().executeJs("this._refreshOptionsToDisplay(this.options, this.inputValue)");
         setLoading(false);
     }
@@ -670,8 +663,14 @@ public class Autosuggest<T> extends PolymerTemplate<Autosuggest.AutosuggestTempl
         this.items.putAll(
                 items.keySet().stream().collect(Collectors.toMap(key -> key, key -> getOption(items.get(key))))
         );
-        getModel().setOptions(new ArrayList<>(this.items.values()));        getElement().executeJs("this._refreshOptionsToDisplay(this.options, this.inputValue)");
+        setOptions(new ArrayList<>(this.items.values()));
+        getElement().executeJs("this._refreshOptionsToDisplay(this.options, this.inputValue)");
         setLoading(false);
+    }
+
+    private void setOptions(List<FOption> options) {
+        List<Map<String, Object>> optionsAsMaps = options.stream().map(FOption::toMap).collect(Collectors.toList());
+        getElement().setPropertyList("options", optionsAsMaps);
     }
 
     private void clearItems() {
